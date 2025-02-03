@@ -8,6 +8,8 @@
 // @match        https://blog.ameba.jp/ucs/entry/srventryupdate*
 // @run-at        document-start
 // @grant        none
+// @updateURL        https://github.com/personwritep/Every_Page_Opener/raw/main/Every_Page_Opener.user.js
+// @downloadURL        https://github.com/personwritep/Every_Page_Opener/raw/main/Every_Page_Opener.user.js
 // ==/UserScript==
 
 
