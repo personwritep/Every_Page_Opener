@@ -54,7 +54,7 @@ function style_in(){
         '#start_button { padding: 4px 8px 2px; margin: 7px 35px 7px 0; width: 170px }'+
         '#import_sw { padding: 4px 0 2px; margin: 7px 10px 7px 0; width: 130px; }'+
         '#import { display: none; }'+
-        '#file_time { display: inline-block; color: #000; padding: 3px 0 2px 12px; }'+
+        '#file_data { display: inline-block; color: #000; padding: 3px 0 2px 12px; }'+
         '#snap_result { display: inline-block; margin: 6px 12px 4px; white-space: nowrap; }'+
         '#am_button { display: inline-block; margin: 6px 15px 0 -20px; float: right; '+
         'cursor: pointer; }'+
@@ -192,7 +192,7 @@ window.addEventListener('load', function(){ // 親ウインドウで働くメイ
                 '<input id="start_button" type="submit">'+
                 '<input id="import_sw" type="button" value="ファイル読込み">'+
                 '<input id="import" type="file">'+
-                '<span id="file_time">　　</span>'+
+                '<span id="file_data">　　</span>'+
                 '</div>'+
                 '<div id="div1">'+
                 '<span id="snap_result"></span>'+
@@ -206,7 +206,7 @@ window.addEventListener('load', function(){ // 親ウインドウで働くメイ
             let button1=box.querySelector('#start_button');
             let button2=box.querySelector('#import');
             let button3=box.querySelector('#import_sw');
-            let span3=box.querySelector('#file_time');
+            let span3=box.querySelector('#file_data');
             let span7=document.querySelector('#snap_result');
             let span8=box.querySelector('#am_button');
 
@@ -296,12 +296,12 @@ window.addEventListener('load', function(){ // 親ウインドウで働くメイ
                             let write_json=JSON.stringify(blogDB);
                             localStorage.setItem('blogDB_back', write_json); // ローカルストレージ 保存
                             reg_set();
-                            time_disp(new Date(file.lastModified));
+                            time_disp(file.name, new Date(file.lastModified));
                             snap_disp(); }
                         else{
                             alert("   ⛔ 不適合なファイルです  blogDB(n).json ファイルを選択してください");}};});
 
-                function time_disp(time_obj){
+                function time_disp(name, time_obj){
                     function digits_two(n){
                         if(n<10){
                             return '0'+n.toString(); }
@@ -311,7 +311,8 @@ window.addEventListener('load', function(){ // 親ウインドウで働くメイ
                     let date_sty=
                         time_obj.getFullYear() + "/" + (time_obj.getMonth() + 1) + "/" + time_obj.getDate() + "　" +
                         digits_two(time_obj.getHours()) + ":" + digits_two(time_obj.getMinutes());
-                    span3.textContent=date_sty; }
+
+                    span3.textContent=name +'　::　'+ date_sty; }
 
                 snap_disp(); } // if(except_am==0)
 
