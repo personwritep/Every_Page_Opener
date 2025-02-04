@@ -183,10 +183,10 @@ window.addEventListener('load', function(){ // 親ウインドウで働くメイ
 
 
     let body_id=document.body.getAttribute('id');
-    if(body_id=='entryListEdit'){ // 親ウインドウでのみ働く
+    if(body_id=='entryListEdit'){ // 親ウインドウの条件
+
         let box=document.querySelector('#sorting');
         if(box){
-
             let insert_div=
                 '<div id="div0">'+
                 '<input id="start_button" type="submit">'+
@@ -209,11 +209,6 @@ window.addEventListener('load', function(){ // 親ウインドウで働くメイ
             let span3=box.querySelector('#file_time');
             let span7=document.querySelector('#snap_result');
             let span8=box.querySelector('#am_button');
-
-
-
-
-
 
 
             button1.value='公開処理の開始　▶';
