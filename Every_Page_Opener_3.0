@@ -6,6 +6,7 @@
 // @author        Ameba Blog User
 // @match        https://blog.ameba.jp/ucs/entry/srventrylist*
 // @match        https://blog.ameba.jp/ucs/entry/srventryupdate*
+// @icon        https://www.google.com/s2/favicons?sz=64&domain=ameba.jp
 // @run-at        document-start
 // @grant        none
 // @updateURL        https://github.com/personwritep/Every_Page_Opener/raw/main/Every_Page_Opener.user.js
