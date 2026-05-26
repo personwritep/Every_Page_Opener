@@ -1,0 +1,180 @@
+// ==UserScript==
+// @name         Every Page Opener
+// @namespace  http://tampermonkey.net/
+// @version       1.3
+// @description  「記事の編集・削除」ページで全ての「下書き」を「公開記事」に変更する
+// @author        Ameba Blog User
+// @match        https://blog.ameba.jp/ucs/entry/srventrylist*
+// @match        https://blog.ameba.jp/ucs/entry/srventryupdate*
+// @run-at        document-start
+// @grant         none
+// ==/UserScript==
+
+
+window.addEventListener('DOMContentLoaded', function(){ // CSSデザインを適用するためのスクリプト
+    'use strict';
+    var css=[
+        '.include-ex-linkBtn, .save-browserPush, .save-hashtag-module, .adcrossBanner{ display: none }',
+        '#globalHeader, #ucsHeader, #ucsMainLeft h1, .l-ucs-sidemenu-area, #ucsMainRight, .actionControl,',
+        '#entryList dl:nth-child(3), .list_icon, #footerAd, #globalFooter, .checkboxAllControl{ display: none }',
+        '#ucsContent{ width: 620px !important } #ucsMain{ background: #fff }',
+        '.rightCol{ width: 210px !important } #ucsMainLeft{ width: 585px !important }',
+        '.leftCol, .titleCol h2{ width: 353px !important }',
+        '#entryList li{ padding: 4px 5px 0 !important; height: 40px}',
+        '#entryList li:hover{ background-color: #e2eef0 }'+
+        '.leftCol a:hover{ text-decoration: none } .leftCol a:visited{ color: #3970b5 }',
+        '#entryList dd{ margin-right: 8px } #entryList dl{ font-size: 13px; padding: 2px 10px; }',
+        '#entryList .txtCol .date{ font-size: 13px; color: #000 }',
+        '#entryList .txtCol{ white-space: nowrap; font-size: 13px; margin-bottom: 2px; line-height: 16px }',
+        '#entryList ul input[value="1"] + input + li .txtCol span:first-child{ display: inline-block;',
+        'margin-top: -2px; padding: 2px 13px 0; color: #fff; background: #2196f3 !important }',
+        '#entryList ul input[value="2"] + input + li .txtCol span:first-child{ display: inline-block; width: 3em;',
+        'text-indent: -1em; overflow: hidden; margin-top: -2px; padding: 2px 13px 0; vertical-align: -4px;',
+        'color: #fff; background: #009688 !important } .btnDefault:hover{ box-shadow: inset 0 0 0 2px',
+        '#1976d2 } .btnDefault{ height: 18px !important; line-height: 20px !important }',
+        '#sorting{ margin: 0 0 4px; padding: 4px 10px; height: 20px } #sorting ul{ padding-top: 3px }',
+        '#sorting >span{ font-size: 15px; line-height: 15px; font-weight: bold; display: inline-block;',
+        'margin-left: 50px; padding: 3px 6px 0; border: 1px solid #aaa; border-radius: 4px;',
+        'background: #fff; cursor: pointer } .pagingArea .active{ border: 2px solid #0066cc; }'].join(' ');
+
+    var style=document.createElement('style');
+    style.insertAdjacentHTML('afterbegin', css);
+    var head=document.getElementsByTagName('head')[0];
+    head.appendChild(style);
+})
+
+
+
+window.addEventListener('load', function(){ // このスクリプトは孫ウインドウだけで働く
+    'use strict';
+    let body_id=document.body.getAttribute('id');
+    if(body_id=="entryCreate"){ // この項だけ孫ウインドウで働く
+
+        select_e(close_w);
+
+        function select_e(close_w){
+            let error_report=document.querySelector('h1.p-error__head');
+            if(error_report==null){
+                if(window.opener){
+                    report('gray');
+                    window.opener.close(); }} // エラー無い場合 grayを送信　親ウインドウを閉じる
+            else{
+                if(window.opener){
+                    report('red');
+                    window.opener.location.reload();
+                }} // エラー報告のある場合は redを送信　親ウインドウを残す
+            close_w(); }
+
+        function close_w(){
+            let close_button=document.querySelector('input[name="close"]');
+            close_button.click(); } // 子ウインドウは常に閉じる
+
+        function report(color){
+            window.opener.document.querySelector('html').style.color=color; }}})
+
+
+
+window.addEventListener('load', function(){ // このスクリプトは親ウインドウで働くメインスクリプト
+    'use strict';
+    var entry_target;
+    var publish_f;
+    var list_bar;
+    var new_win;
+    var link_target;
+
+    entry_target=document.querySelectorAll('.deleteCol');
+    publish_f=document.querySelectorAll('input[name="publish_flg"]');
+    list_bar=document.querySelectorAll('#entryList li');
+
+    let body_id=document.body.getAttribute('id');
+    if(body_id=='entryListEdit'){
+        let button=document.createElement('span');
+        button.insertAdjacentHTML('afterbegin', 'Click here to Edit');
+        let start_button=document.querySelector('#sorting');
+        start_button.appendChild(button);
+
+        button.addEventListener('click', function(){ start_select(); }, false);
+        function start_select(){
+            start_button.removeChild(button);
+            if(entry_target.length==0 || entry_target==null){ // 編集対象がリストに無い場合
+                alert('編集対象の記事がありません'); }
+            if(entry_target.length >0){ // 編集対象がリストに有る場合
+                let conf_str=['　　⛔　このページの「下書き」を 全て「公開記事」に変更します',
+                              '\n　　⛔　「アメンバー記事」の公開設定は変更しません'].join(' ');
+                let ok=confirm(conf_str);
+                if(ok){ open_all(); }}}}
+
+
+    function open_all(){
+        entry_target=document.querySelectorAll('.deleteCol');
+        publish_f=document.querySelectorAll('input[name="publish_flg"]');
+        new_win=Array(entry_target.length);
+        link_target=Array(entry_target.length);
+
+        open_win(0);
+        if(entry_target.length>1){
+            let k=1;
+            let slow_open=setInterval( function(){
+                open_win(k);
+                k +=1;
+                if(k>=entry_target.length){ clearInterval(slow_open); }}, 3500); }} // 3.5secの間隔で自動実行 ⭕
+
+
+    function open_win(k){
+        entry_target=document.querySelectorAll('.deleteCol');
+        publish_f=document.querySelectorAll('input[name="publish_flg"]');
+
+        link_target[k]=entry_target[k].getElementsByTagName('a')[0].getAttribute('href');
+        let top_p=100 + 30*k;
+
+        if(publish_f[k].value=='1'){ //「下書き」のみ処理する
+            new_win[k]=window.open(link_target[k], k, 'top=' + top_p + ', left=200, width=750, height=180');
+
+            list_bar[k].style.boxShadow='inset 0 0 0 2px #03a9f4'; // リスト欄に青枠表示
+            new_win[k].addEventListener('load', function(){
+                setTimeout( function(){
+                    edit_target(publish_f[k].value, k); }, 500); });} // 子ウインドウで書込み開始
+        else{
+            list_bar[k].style.backgroundColor='#eceff1'; }} // 子ウインドウを開かず リスト背景を 淡グレー
+
+
+
+    function edit_target(val,k){
+        let editor_flg=new_win[k].document.querySelector('input[name="editor_flg"]');
+
+        if(editor_flg.value=='5'){ // 最新版エディタの文書の場合
+            twice(end_do,k); }
+        if(editor_flg.value=='1'){ // タグ編集エディタの文書の場合
+            twice(end_do,k); }
+
+        function twice(end_do,k){
+            setTimeout( function(){
+                publish_do(val,k); }, 500);
+            end_do(k); }
+
+        function end_do(k){ // 送信操作の進行中
+            new_win[k].addEventListener('beforeunload', flag_line , false); }
+
+        function flag_line(){
+            let send_color=new_win[k].document.querySelector('html').style.color;
+            if(send_color=='gray'){ // 正常終了の報告
+                list_bar[k].style.boxShadow='none';
+                list_bar[k].style.backgroundColor='#a4d5fd';
+                let publish_f_tetCol=list_bar[k].querySelector('.txtCol span:first-child');
+                let sty=['display: inline-block; margin-top: -2px; padding: 2px 13px 0;',
+                            'color: #000; background: #fff !important'].join(' ');
+                publish_f_tetCol.textContent='全員に公開';
+                publish_f_tetCol.style=sty; } // 孫ウインドウが編集ウインドウが閉じたら正常終了　背景 淡ブルー
+            if(send_color=='red'){
+                list_bar[k].style.boxShadow='inset 0 0 0 2px red';
+                list_bar[k].style.backgroundColor='#fff'; }} // 孫ウインドウのエラー報告の場合は閉じず　背景 白 赤枠
+
+        function publish_do(val,k){
+            let publish_b0=new_win[k].document.querySelector('button.js-submitButton[publishflg="0"]');
+            let publish_b1=new_win[k].document.querySelector('button.js-submitButton[publishflg="1"]');
+            let publish_b2=new_win[k].document.querySelector('button.js-submitButton[publishflg="2"]');
+            if(val==0){ publish_b0.click(); }
+            if(val==1){ publish_b0.click(); } // 実際はこの「下書き」→「公開記事」の書換えのみ実行される
+            if(val==2){ publish_b2.click(); }}}
+
+})
